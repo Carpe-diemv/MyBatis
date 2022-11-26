@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhou.mybatis.mapper.DynamicSQLMapper">
+
+
+    <!--
+        * 动态SQL：
+        * 5、foreach
+        * collection:设置需要循环的数组或集合
+        * item:表示数组或集合中的每一个数据
+        * separator:循环体之间的分割符
+        * open:foreach标签所循环的所有内容的开始符
+        * close:foreach标签所循环的所有内容的结束符  -->
+    <!--int insertMoreByList(@Param("emps") List<Emp> emps);-->
+    <insert id="insertMoreByList">
+        insert into t_emp values
+        <foreach collection="emps" item="emp" separator=",">
+            (null,#{emp.empName},#{emp.age},#{emp.sex},#{emp.email},null)
+        </foreach>
+    </insert>
+
+
+
+    <!--
+    * 动态SQL：
+    * 5、foreach
+    * collection:设置需要循环的数组或集合
+    * item:表示数组或集合中的每一个数据
+    * separator:循环体之间的分割符
+    * open:foreach标签所循环的所有内容的开始符
+    * close:foreach标签所循环的所有内容的结束符  -->
+    <!--int deleteMoreByArray(@Param("eids") Integer[] eids);-->
+    <delete id="deleteMoreByArray">
+
+        delete from t_emp where
+        <foreach collection="eids" item="eid" separator="or">
+            eid = #{eid}
+        </foreach>
+
+
+            <!--
+            delete from t_emp where eid in
+            <foreach collection="eids" item="eid" separator="," open="(" close=")">
+                #{eid}
+            </foreach>
+                -->
+
+    </delete>
+
+
+
+
+    <!--
+    * 动态SQL：
+    * 4、choose、when、otherwise，相当于if...else if...else
+    * when至少要有一个，otherwise最多只能有一个   -->
+    <!--List<Emp> getEmpByChoose(Emp emp);-->
+    <select id="getEmpByChoose" resultType="Emp">
+        select * from t_emp
+        <where>
+            <choose>
+                <when test="empName != null and empName != ''">
+                    emp_name = #{empName}
+                </when>
+                <when test="age != null and age != ''">
+                    age = #{age}
+                </when>
+                <when test="sex != null and sex != ''">
+                    sex = #{sex}
+                </when>
+                <when test="email != null and email != ''">
+                    email = #{email}
+                </when>
+                <otherwise>
+                    did = 1
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+
+
+    <!--
+    * 动态SQL：
+    * 6、sql标签
+    * 设置SQL片段：<sql id="empColumns">eid,emp_name,age,sex,email</sql>
+    * 引用SQL片段：<include refid="empColumns"></include>
+                 <sql id="empColumns">eid,emp_name,age,sex,email</sql>    -->
+    <sql id="empColumns">eid,emp_name,age,sex,email</sql>
+
+    <!--List<Emp> getEmpByCondition(Emp emp);-->
+    <!--
+    * 动态SQL：
+    * 3、trim：
+    * 若标签中有内容时：
+    * prefix|suffix：将trim标签中内容前面或后面添加指定内容
+    * suffixOverrides|prefixOverrides：将trim标签中内容前面或后面去掉指定内容
+    * 若标签中没有内容时，trim标签也没有任何效果-->
+    <select id="getEmpByCondition" resultType="Emp">
+        select <include refid="empColumns"></include> from t_emp
+        <trim prefix="where" suffixOverrides="and|or">
+            <if test="empName != null and empName != ''">
+                emp_name = #{empName} and
+            </if>
+            <if test="age != null and age != ''">
+                age = #{age} or
+            </if>
+            <if test="sex != null and sex != ''">
+                sex = #{sex} and
+            </if>
+            <if test="email != null and email != ''">
+                email = #{email}
+            </if>
+        </trim>
+    </select>
+
+
+    <!--* 动态SQL：
+    * 2、where：
+    * 当where标签中有内容时，会自动生成where关键字，并且将内容前多余的and或or去掉
+    * 当where标签中没有内容时，此时where标签没有任何效果
+    * 注意：where标签不能将其中内容后面多余的and或or去掉  -->
+    <select id="getEmpByConditionTwo" resultType="Emp">
+        select * from t_emp
+        <where>
+            <if test="empName != null and empName != ''">
+<!--                emp_name = #{empName} and -->
+                emp_name = #{empName}
+            </if>
+            <if test="age != null and age != ''">
+                and age = #{age}
+<!--                 and age = #{age}  -->
+            </if>
+            <if test="sex != null and sex != ''">
+                or sex = #{sex}
+            </if>
+            <if test="email != null and email != ''">
+                and email = #{email}
+            </if>
+        </where>
+    </select>
+
+
+    <!-- 动态SQL：
+    1、if：根据标签中test属性所对应的表达式决定标签中的内容是否需要拼接到SQL中  -->
+    <select id="getEmpByConditionOne" resultType="Emp">
+        select * from t_emp where  1=1
+        <if test="empName != null and empName != ''">
+            emp_name = #{empName}
+        </if>
+        <if test="age != null and age != ''">
+            and age = #{age}
+        </if>
+        <if test="sex != null and sex != ''">
+            and sex = #{sex}
+        </if>
+        <if test="email != null and email != ''">
+            and email = #{email}
+        </if>
+    </select>
+
+</mapper>
